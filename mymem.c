@@ -20,7 +20,7 @@ struct memoryList
     char alloc;          // 1 if this block is allocated,
     // 0 if this block is free.
     void *ptr;           // location of block in memory pool.
-};
+}node;
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -28,8 +28,24 @@ strategies myStrategy = NotSet;    // Current strategy
 size_t mySize;
 void *myMemory = NULL;
 
-static struct memoryList *head;
-static struct memoryList *nextFit;
+
+static struct node *head;
+static struct node *nextFit;
+struct node* prevNode = NULL;
+
+struct node *first(int size,char alloc, void *ptr){
+    struct node *newNode = malloc(sizeof (node));
+
+    newNode->size = size;
+    newNode->alloc = alloc;
+    newNode->ptr = ptr;
+    newNode->next = NULL;
+    newNode->prev = NULL;
+    head = newNode;
+    prevNode = newNode;
+
+    return newNode;
+}
 
 
 /* initmem must be called prior to mymalloc and myfree.
