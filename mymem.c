@@ -9,8 +9,9 @@
 /* The main structure for implementing memory allocation.
  * You may change this to fit your implementation.
  */
+void *malloc(size_t size);
 
-struct memoryList
+typedef struct node
 {
     // doubly-linked list
     struct memoryList *prev;
@@ -22,6 +23,7 @@ struct memoryList
     void *ptr;           // location of block in memory pool.
 }node;
 
+
 strategies myStrategy = NotSet;    // Current strategy
 
 
@@ -29,22 +31,32 @@ size_t mySize;
 void *myMemory = NULL;
 
 
-static struct node *head;
+static node *head;
 static struct node *nextFit;
 struct node* prevNode = NULL;
 
 struct node *first(int size,char alloc, void *ptr){
-    struct node *newNode = malloc(sizeof (node));
-
+    node *current = head;
+    node *newNode = malloc(sizeof (node));
+    node *prevCur;
     newNode->size = size;
     newNode->alloc = alloc;
     newNode->ptr = ptr;
-    newNode->next = NULL;
-    newNode->prev = NULL;
-    head = newNode;
-    prevNode = newNode;
 
-    return newNode;
+    while(current!=NULL){
+      if(current->size > newNode->size && current->alloc==0){
+          prevCur = current->prev;
+          current->size = current->size - newNode->size;
+          newNode->prev = prevCur;
+          prevCur->next = newNode;
+          current->prev = newNode;
+          newNode->next = current;
+          current = current->next;
+          return newNode;
+      }
+    }
+    printf("No free space was big enough for this memoryBlock");
+    return NULL;
 }
 
 
