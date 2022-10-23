@@ -59,7 +59,53 @@ struct node *first(int size,char alloc, void *ptr){
     return NULL;
 }
 
+int mem_Holes(){
+    node *current = head;
+    int holes = 0;
+    while(current!=NULL){
+        if(current->alloc == 0){
+            holes++;
+        }
+        current = current->next;
+    }
+    return holes;
+}
 
+int mem_Allocated(){
+    node *current = head;
+    int allo = 0;
+    while(current!=NULL){
+        if(current->alloc == 1){
+            allo = allo+current->size;
+        }
+        current = current->next;
+    }
+    return allo;
+}
+
+int mem_Free(){
+    node *current = head;
+    int free = 0;
+    while(current!=NULL){
+        if(current->alloc == 0){
+            free = free+current->size;
+        }
+        current = current->next;
+    }
+    return free;
+}
+
+int mem_LargestFree(){
+    node *current = head;
+    int large = 0;
+    while(current!=NULL){
+        if(current->alloc == 1 && current->size>large){
+            large = current->size;
+        }
+        current = current->next;
+    }
+    return large;
+}
 /* initmem must be called prior to mymalloc and myfree.
 
    initmem may be called more than once in a given exeuction;
