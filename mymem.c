@@ -64,6 +64,23 @@ void initmem(strategies strategy, size_t sz)
 
 
 }
+struct memoryList bestFit(size_t requested){
+    struct memoryList current = *head;
+    //brug firstFit her i stedet. Midlertidig løsning:
+    struct memoryList best = *head;
+
+    while(current.next != NULL){
+        if(current.alloc == 0){
+            int diff = current.size - requested;
+            if (diff >= 0 && diff < best.size){
+                best = current;
+            }
+        }
+        current = *current.next;
+    }
+    //return best fit node
+    return best;
+}
 
 /* Allocate a block of memory with the requested size.
  *  If the requested block is not available, mymalloc returns NULL.
@@ -71,8 +88,10 @@ void initmem(strategies strategy, size_t sz)
  *  Restriction: requested >= 1
  */
 
+
 void *mymalloc(size_t requested)
 {
+    struct memoryList current;
     assert((int)myStrategy > 0);
 
     switch (myStrategy)
@@ -107,7 +126,17 @@ void myfree(void* block)
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes()
 {
-    return 0;
+    int counter = 0;
+    struct memoryList current = *head;
+    struct memoryList next;
+    while(current.next != NULL){
+        next = *current.next;
+        if(next.alloc == '0' && current.alloc == '0'){
+            counter++;
+        }
+        current = *current.next;
+    }
+    return counter;
 }
 
 /* Get the number of bytes allocated */
