@@ -59,53 +59,13 @@ struct node *first(int size,char alloc, void *ptr){
     return NULL;
 }
 
-int mem_Holes(){
-    node *current = head;
-    int holes = 0;
-    while(current!=NULL){
-        if(current->alloc == 0){
-            holes++;
-        }
-        current = current->next;
-    }
-    return holes;
-}
 
-int mem_Allocated(){
-    node *current = head;
-    int allo = 0;
-    while(current!=NULL){
-        if(current->alloc == 1){
-            allo = allo+current->size;
-        }
-        current = current->next;
-    }
-    return allo;
-}
 
-int mem_Free(){
-    node *current = head;
-    int free = 0;
-    while(current!=NULL){
-        if(current->alloc == 0){
-            free = free+current->size;
-        }
-        current = current->next;
-    }
-    return free;
-}
 
-int mem_LargestFree(){
-    node *current = head;
-    int large = 0;
-    while(current!=NULL){
-        if(current->alloc == 1 && current->size>large){
-            large = current->size;
-        }
-        current = current->next;
-    }
-    return large;
-}
+
+
+
+
 /* initmem must be called prior to mymalloc and myfree.
 
    initmem may be called more than once in a given exeuction;
@@ -179,33 +139,69 @@ void myfree(void* block)
  */
 
 /* Get the number of contiguous areas of free space in memory. */
-int mem_holes()
-{
-    return 0;
+int mem_holes(){
+    node *current = head;
+    int holes = 0;
+    while(current!=NULL){
+        if(current->alloc == 0){
+            holes++;
+        }
+        current = current->next;
+    }
+    return holes;
 }
 
 /* Get the number of bytes allocated */
-int mem_allocated()
-{
-    return 0;
+int mem_allocated(){
+    node *current = head;
+    int allo = 0;
+    while(current!=NULL){
+        if(current->alloc == 1){
+            allo = allo+current->size;
+        }
+        current = current->next;
+    }
+    return allo;
 }
 
 /* Number of non-allocated bytes */
-int mem_free()
-{
-    return 0;
+int mem_free(){
+    node *current = head;
+    int free = 0;
+    while(current!=NULL){
+        if(current->alloc == 0){
+            free = free+current->size;
+        }
+        current = current->next;
+    }
+    return free;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
-int mem_largest_free()
-{
-    return 0;
+int mem_largest_free(){
+    node *current = head;
+    int large = 0;
+    while(current!=NULL){
+        if(current->alloc == 1 && current->size>large){
+            large = current->size;
+        }
+        current = current->next;
+    }
+    return large;
 }
 
 /* Number of free blocks smaller than or equal to "size" bytes. */
 int mem_small_free(int size)
 {
-    return 0;
+    node *current = head;
+    int smallnodes = 0;
+    while(current!=NULL){
+        if(current->alloc == 0 && current->size<size){
+            smallnodes++;
+        }
+        current = current->next;
+    }
+    return smallnodes;
 }
 
 char mem_is_alloc(void *ptr)
