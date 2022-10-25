@@ -56,13 +56,11 @@ void initmem(strategies strategy, size_t sz)
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
 
-
     myMemory = malloc(sz);
 
     /* TODO: Initialize memory management structure. */
-
-
 }
+
 struct memoryList bestFit(size_t requested){
     struct memoryList current = *head;
     //brug firstFit her i stedet. Midlertidig løsning:
@@ -108,6 +106,11 @@ void *mymalloc(size_t requested)
     }
     //myMalloc on current with requested size.
     //split ny node
+    size_t diff = current.size - requested;
+    if(diff == 0){
+        //node allokeres bare
+        current.alloc = '1';
+    }
 
     //return NULL;
 }
@@ -116,7 +119,9 @@ void *mymalloc(size_t requested)
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
-    return;
+    if(block != NULL){
+        free(block);
+    }
 }
 
 /****** Memory status/property functions ******
