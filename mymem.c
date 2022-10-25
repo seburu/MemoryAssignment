@@ -32,32 +32,37 @@ void *myMemory = NULL;
 
 
 static struct memoryList *head;
-static struct node *nextFit;
-struct node* prevNode = NULL;
+static struct memoryList *nextFit;
+//struct memoryList* prevNode = NULL;
 
-struct node *first(int size,char alloc){
+struct memoryList *first(size_t size,char alloc){
     struct memoryList *current = head;
-    struct memoryList *newNode = malloc(size);
-    struct memoryList *prevCur;
-    newNode->size = size;
-    newNode->alloc = alloc;
+    struct memoryList *first = malloc(size);
 
     while(current!=NULL){
-      if(current->size > newNode->size && current->alloc==0){
-          prevCur = current->prev;
-          current->size = current->size - newNode->size;
-          newNode->prev = prevCur;
-          prevCur->next = newNode;
-          current->prev = newNode;
-          newNode->next = current;
-          current = current->next;
-          return newNode;
+      if(current->size > size && current->alloc==0){
+          first = current;
       }
+      current = current->next;
     }
     printf("No free space was big enough for this memoryBlock");
-    return NULL;
+    return first;
 }
 
+void insertMemBlock(struct memoryList* current, size_t size){
+    int newSize = current->size - size;
+    struct memoryList *reqNode;
+    struct memoryList *extraNode;
+
+    extraNode = current;
+    reqNode->size = size;
+    extraNode->size = newSize;
+
+    extraNode->prev->next = reqNode;
+    reqNode->prev = extraNode->prev;
+    extraNode->prev = reqNode;
+    reqNode->next = extraNode;
+}
 
 
 
