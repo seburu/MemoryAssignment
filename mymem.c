@@ -5,7 +5,6 @@
 #include "mymem.h"
 #include <time.h>
 
-
 /* The main structure for implementing memory allocation.
  * You may change this to fit your implementation.
  */
@@ -72,7 +71,7 @@ struct memoryList bestFit(size_t requested){
     while(current.next != NULL){
         if(current.alloc == 0){
             int diff = current.size - requested;
-            if (diff >= 0 && diff < best.size){
+            if (diff >= 0 && diff < (best.size - requested)){
                 best = current;
             }
         }
@@ -101,13 +100,16 @@ void *mymalloc(size_t requested)
         case First:
             return NULL;
         case Best:
-            return NULL;
+            current = bestFit(requested);
         case Worst:
             return NULL;
         case Next:
             return NULL;
     }
-    return NULL;
+    //myMalloc on current with requested size.
+    //split ny node
+
+    //return NULL;
 }
 
 
@@ -163,6 +165,7 @@ int mem_small_free(int size)
     return 0;
 }
 
+//Is a particular byte allocated or not?
 char mem_is_alloc(void *ptr)
 {
     return 0;
