@@ -11,7 +11,7 @@
  */
 void *malloc(size_t size);
 
-typedef struct node
+typedef struct memoryList
 {
     // doubly-linked list
     struct memoryList *prev;
@@ -21,7 +21,7 @@ typedef struct node
     char alloc;          // 1 if this block is allocated,
     // 0 if this block is free.
     void *ptr;           // location of block in memory pool.
-}node;
+};
 
 
 strategies myStrategy = NotSet;    // Current strategy
@@ -31,17 +31,16 @@ size_t mySize;
 void *myMemory = NULL;
 
 
-static node *head;
+static struct memoryList *head;
 static struct node *nextFit;
 struct node* prevNode = NULL;
 
-struct node *first(int size,char alloc, void *ptr){
-    node *current = head;
-    node *newNode = malloc(sizeof (node));
-    node *prevCur;
+struct node *first(int size,char alloc){
+    struct memoryList *current = head;
+    struct memoryList *newNode = malloc(size);
+    struct memoryList *prevCur;
     newNode->size = size;
     newNode->alloc = alloc;
-    newNode->ptr = ptr;
 
     while(current!=NULL){
       if(current->size > newNode->size && current->alloc==0){
@@ -140,7 +139,7 @@ void myfree(void* block)
 
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes(){
-    node *current = head;
+    struct memoryList *current = head;
     int holes = 0;
     while(current!=NULL){
         if(current->alloc == 0){
@@ -153,7 +152,7 @@ int mem_holes(){
 
 /* Get the number of bytes allocated */
 int mem_allocated(){
-    node *current = head;
+    struct memoryList *current = head;
     int allo = 0;
     while(current!=NULL){
         if(current->alloc == 1){
@@ -166,7 +165,7 @@ int mem_allocated(){
 
 /* Number of non-allocated bytes */
 int mem_free(){
-    node *current = head;
+    struct memoryList *current = head;
     int free = 0;
     while(current!=NULL){
         if(current->alloc == 0){
@@ -179,7 +178,7 @@ int mem_free(){
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free(){
-    node *current = head;
+    struct memoryList *current = head;
     int large = 0;
     while(current!=NULL){
         if(current->alloc == 1 && current->size>large){
@@ -193,7 +192,7 @@ int mem_largest_free(){
 /* Number of free blocks smaller than or equal to "size" bytes. */
 int mem_small_free(int size)
 {
-    node *current = head;
+    struct memoryList *current = head;
     int smallnodes = 0;
     while(current!=NULL){
         if(current->alloc == 0 && current->size<size){
@@ -206,6 +205,13 @@ int mem_small_free(int size)
 
 char mem_is_alloc(void *ptr)
 {
+    struct memoryList *current = head;
+    while(current!=NULL){
+        if(current->ptr == ptr && current->alloc==1){
+           return 1;
+        }
+        current = current->next;
+    }
     return 0;
 }
 
