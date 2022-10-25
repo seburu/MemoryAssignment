@@ -21,14 +21,46 @@ struct memoryList
     void *ptr;           // location of block in memory pool.
 };
 
+
 strategies myStrategy = NotSet;    // Current strategy
 
 
 size_t mySize;
 void *myMemory = NULL;
 
+
 static struct memoryList *head;
 static struct memoryList *nextFit;
+//struct memoryList* prevNode = NULL;
+
+struct memoryList *first(size_t size,char alloc){
+    struct memoryList *current = head;
+    struct memoryList *first = malloc(size);
+
+    while(current!=NULL){
+      if(current->size > size && current->alloc==0){
+          first = current;
+      }
+      current = current->next;
+    }
+    printf("No free space was big enough for this memoryBlock");
+    return first;
+}
+
+void insertMemBlock(struct memoryList* current, size_t size){
+    int newSize = current->size - size;
+    struct memoryList *reqNode;
+    struct memoryList *extraNode;
+
+    extraNode = current;
+    reqNode->size = size;
+    extraNode->size = newSize;
+
+    extraNode->prev->next = reqNode;
+    reqNode->prev = extraNode->prev;
+    extraNode->prev = reqNode;
+    reqNode->next = extraNode;
+}
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -147,32 +179,68 @@ int mem_holes()
 }
 
 /* Get the number of bytes allocated */
-int mem_allocated()
-{
-    return 0;
+int mem_allocated(){
+    struct memoryList *current = head;
+    int allo = 0;
+    while(current!=NULL){
+        if(current->alloc == 1){
+            allo = allo+current->size;
+        }
+        current = current->next;
+    }
+    return allo;
 }
 
 /* Number of non-allocated bytes */
-int mem_free()
-{
-    return 0;
+int mem_free(){
+    struct memoryList *current = head;
+    int free = 0;
+    while(current!=NULL){
+        if(current->alloc == 0){
+            free = free+current->size;
+        }
+        current = current->next;
+    }
+    return free;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
-int mem_largest_free()
-{
-    return 0;
+int mem_largest_free(){
+    struct memoryList *current = head;
+    int large = 0;
+    while(current!=NULL){
+        if(current->alloc == 1 && current->size>large){
+            large = current->size;
+        }
+        current = current->next;
+    }
+    return large;
 }
 
 /* Number of free blocks smaller than or equal to "size" bytes. */
 int mem_small_free(int size)
 {
-    return 0;
+    struct memoryList *current = head;
+    int smallnodes = 0;
+    while(current!=NULL){
+        if(current->alloc == 0 && current->size<size){
+            smallnodes++;
+        }
+        current = current->next;
+    }
+    return smallnodes;
 }
 
 //Is a particular byte allocated or not?
 char mem_is_alloc(void *ptr)
 {
+    struct memoryList *current = head;
+    while(current!=NULL){
+        if(current->ptr == ptr && current->alloc==1){
+           return 1;
+        }
+        current = current->next;
+    }
     return 0;
 }
 
