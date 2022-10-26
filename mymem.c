@@ -16,8 +16,7 @@ struct memoryList
     struct memoryList *next;
 
     int size;            // How many bytes in this block?
-    char alloc;          // 1 if this block is allocated,
-                         // 0 if this block is free.
+    char alloc;          // f
     void *ptr;           // location of block in memory pool.
 };
 
@@ -179,7 +178,7 @@ void *mymalloc(size_t requested)
         case Best:
             *current = bestFit(requested);
         case Worst:
-            current = worstFit(requested);
+            *current = worstFit(requested);
         case Next:
             return NULL;
     }
