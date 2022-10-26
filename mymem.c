@@ -31,61 +31,72 @@ static struct memoryList *head;
 static struct memoryList *nextFit;
 //struct memoryList* prevNode = NULL;
 
+//Prototype
+struct memoryList * first(size_t size);
+struct memoryList * worst(size_t size);
+struct memoryList * next(size_t size);
+struct memoryList * best(size_t size);
+
+
 struct memoryList *first(size_t size){
     struct memoryList *current = head;
-    struct memoryList *first;
 
     while(current!=NULL){
-      if(current->size > size && current->alloc==0){
-          first = current;
+      if(current->size >= size && current->alloc==0){
           break;
       }
       current = current->next;
     }
     //printf("No free space was big enough for this memoryBlock");
-    return first;
+    return current; //Can be NULL
 }
 
 struct memoryList *next(size_t size){
-    struct memoryList *current = nextFit;
-    struct memoryList *next;
+    struct memoryList *current = nextFit, *roundtrip = nextFit;
 
-    //We check if we are at the end of the list, if so we loop back around to the start.
-    if (current == NULL){
-        current = head;
-    }
-
-    while(current!=NULL){
-        if(current->size > size && current->alloc==0){
-            next = current;
+    do{
+        if(current->size >= size && current->alloc==0){
             break;
         }
-        current = current->next;
-    }
-    if(next == NULL){
-        first(size);
-    }
+        //Treat as circular list
+        if(current->next == NULL){ current = head;}
+        else { current = current->next; }
 
+    } while (current != roundtrip);
     //printf("No free space was big enough for this memoryBlock");
-    return next;
+
+    if(current->alloc == 0 && current->size >= size){
+        return current;
+    }
+    return NULL; //Can be NULL
 }
 
-void insertMemBlock(struct memoryList* current, size_t size){
-    int newSize = current->size - size;
-    struct memoryList *reqNode = NULL;
-    struct memoryList *extraNode;
+void *insertMemBlock(struct memoryList* current, size_t size){
+    if(current == NULL){return NULL;}
+    if(current->size == size){ current->alloc = 1; return current->ptr;}
 
-    extraNode = current;
-    reqNode->size = size;
-    extraNode->size = newSize;
+    //assumption, node size is bigger than 'size'
 
-    extraNode->prev->next = reqNode;
-    reqNode->prev = extraNode->prev;
-    extraNode->prev = reqNode;
-    reqNode->next = extraNode;
-    reqNode->ptr = &reqNode;
+    struct memoryList *extraNode = malloc(sizeof(struct memoryList));
+// fix pointers (prev, next) TODO
+    //current next ikke findes check
+    extraNode->prev = current;
+    extraNode->next = current->next;
+    if(current->next != NULL){
+        current->next->prev = extraNode;
+    }
+    current->next = extraNode;
+
+// fix data (size, alloc, ptr) TODO
+    extraNode->size = current->size - size;
+    current->size = size;
+    current->alloc = 1;
+    extraNode->alloc = 0;
+//  current->ptr = current->ptr;
+    extraNode->ptr = current->ptr + size;
+
+    return current->ptr;
 }
-
 
 /* initmem must be called prior to mymalloc and myfree.
 
@@ -110,12 +121,13 @@ void initmem(strategies strategy, size_t sz){
     if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+    //Husk at iterere igennem listen!!
     if(head!=NULL){
         free(head);
     }
 
-
     myMemory = malloc(sz);
+    printf(myMemory);
     /* TODO: Initialize memory management structure. */
     head->next = NULL;
     head->prev = NULL;
@@ -123,40 +135,37 @@ void initmem(strategies strategy, size_t sz){
     head->size = sz;
     head->ptr = myMemory;
 
-
 }
 
-struct memoryList bestFit(size_t requested){
-    struct memoryList current = *head;
+struct memoryList *best(size_t requested){
+    struct memoryList *current = head;
     //brug firstFit her i stedet. Midlertidig løsning:
-    struct memoryList best = *first(requested);
+    struct memoryList *best = first(requested);
 
-    while(current.next != NULL){
-        if(current.alloc == 0){
-            int diff = current.size - requested;
-            if (diff >= 0 && diff < (best.size - requested)){
+    while(current != NULL){
+        if(current->alloc == 0){
+            int diff = current->size - requested;
+            if (diff >= 0 && diff < (best->size - requested)){
                 best = current;
-                break;
             }
         }
-        current = *current.next;
+        current = current->next;
     }
     //return best fit node
     return best;
 }
-struct memoryList worstFit(size_t requested){
-    struct memoryList current = *head;
-    struct memoryList worst = *first(requested);
+struct memoryList *worst(size_t requested){
+    struct memoryList *current = head;
+    struct memoryList *worst = first(requested);
 
-    while(current.next != NULL){
-        if(current.alloc == 0){
-            int diff = current.size - requested;
-            if (diff >= 0 && current.size > worst.size){
+    while(current != NULL){
+        if(current->alloc == 0){
+            int diff = current->size - requested;
+            if (diff >= 0 && current->size > worst->size){
                 worst = current;
-                break;
             }
         }
-        current = *current.next;
+        current = current->next;
     }
     //return worst fit node
     return worst;
@@ -178,26 +187,75 @@ void *mymalloc(size_t requested){
         case NotSet:
             return NULL;
         case First:
-             current = first(requested);
+            current = first(requested);
+            break;
         case Best:
-            *current = bestFit(requested);
+            current = best(requested);
+            break;
         case Worst:
-            *current = worstFit(requested);
+            current = worst(requested);
+            break;
         case Next:
-             current = next(requested);
+            current = next(requested);
+            break;
     }
 
     //myMalloc on current with requested size.
     insertMemBlock(current,requested);
-    return NULL;
+    //return noget!
 }
 
-
+// 1 til 0. Hvis der er naboer der er 0 merges de.
 /* Frees a block of memory previously allocated by mymalloc. */
-void myfree(void* block)
-{
-    if(block != NULL){
-        free(block);
+void myfree(void* block){
+
+    struct memoryList* current = head, *iamadummytobedeleted;
+    if(current == NULL){return;}
+    while (current != NULL){
+        if(current->ptr == block){
+            break;
+        }
+        current = current->next;
+    }
+    if(current == NULL){return;}
+
+    current->alloc = 0;
+    //check if prev node exist and is also null, then merge
+    if(current->prev != NULL && current->prev->alloc == 0){
+        //set struct pointers to look at what they're supposed to be used
+        iamadummytobedeleted = current;
+        current = current->prev;
+
+        //fix data
+        current->size += iamadummytobedeleted->size;
+        //current->alloc = 0;
+
+        //fix pointers
+        current->next = iamadummytobedeleted->next;
+        if(iamadummytobedeleted->next != NULL){
+            iamadummytobedeleted->next->prev = current;
+        }
+
+        free(iamadummytobedeleted);
+    }
+
+    //check if next node exist and is also null, then merge
+    if(current->next != NULL && current->next->alloc == 0){
+        //set struct pointers to look at what they're supposed to be used
+        iamadummytobedeleted = current->next;
+        //current = current;
+
+        //fix data
+        current->size += iamadummytobedeleted->size;
+        //current->alloc = 0;
+
+        //fix pointers
+        current->next = iamadummytobedeleted->next;
+        if(iamadummytobedeleted->next != NULL){
+            iamadummytobedeleted->next->prev = current;
+        }
+
+        free(iamadummytobedeleted);
     }
 }
 
@@ -206,18 +264,17 @@ void myfree(void* block)
  * Note that when refered to "memory" here, it is meant that the
  * memory pool this module manages via initmem/mymalloc/myfree.
  */
-
+// Skal vi burge funktionerne til vores strategier?
+// hvad menes med den her?
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes(){
     int counter = 0;
-    struct memoryList current = *head;
-    struct memoryList next;
-    while(current.next != NULL){
-        next = *current.next;
-        if(next.alloc == '0' && current.alloc == '0'){
+    struct memoryList *current = head;
+    while(current != NULL){
+        if(current->alloc == 0){
             counter++;
         }
-        current = *current.next;
+        current = current->next;
     }
     return counter;
 }
@@ -253,7 +310,7 @@ int mem_largest_free(){
     struct memoryList *current = head;
     int large = 0;
     while(current!=NULL){
-        if(current->alloc == 1 && current->size>large){
+        if(current->alloc == 0 && current->size > large){
             large = current->size;
         }
         current = current->next;
@@ -375,8 +432,7 @@ void print_memory_status()
  * We have given you a simple example to start.
  */
 void try_mymem(int argc, char **argv) {
-/*    strategies strat;
-
+    strategies strat;
     void *a, *b, *c, *d, *e;
     if(argc > 1)
         strat = strategyFromString(argv[1]);
@@ -384,11 +440,11 @@ void try_mymem(int argc, char **argv) {
         strat = First;
 
 
-     A simple example.
-       Each algorithm should produce a different layout.
+    /* A simple example.
+       Each algorithm should produce a different layout. */
 
     initmem(strat,500);
-
+    //my malloc skal returnerer en pointer til hvor der er blevet indsat noget?
     a = mymalloc(100);
     b = mymalloc(100);
     c = mymalloc(100);
@@ -400,5 +456,4 @@ void try_mymem(int argc, char **argv) {
     print_memory();
     print_memory_status();
 
- */
 }
