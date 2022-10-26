@@ -17,7 +17,7 @@ struct memoryList
 
     int size;            // How many bytes in this block?
     char alloc;          // 1 if this block is allocated,
-    // 0 if this block is free.
+                         // 0 if this block is free.
     void *ptr;           // location of block in memory pool.
 };
 
@@ -91,6 +91,10 @@ void initmem(strategies strategy, size_t sz)
     myMemory = malloc(sz);
 
     /* TODO: Initialize memory management structure. */
+
+    head->size = sz;
+
+
 }
 
 struct memoryList bestFit(size_t requested){
@@ -137,12 +141,7 @@ void *mymalloc(size_t requested)
             return NULL;
     }
     //myMalloc on current with requested size.
-    //split ny node
-    size_t diff = current.size - requested;
-    if(diff == 0){
-        //node allokeres bare
-        current.alloc = '1';
-    }
+    insertMemBlock(current*,requested);
 
     //return NULL;
 }
