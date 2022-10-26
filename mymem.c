@@ -47,6 +47,25 @@ struct memoryList *first(size_t size){
     return first;
 }
 
+struct memoryList *next(size_t size){
+    struct memoryList *current = nextFit;
+    struct memoryList *first;
+
+    //We check if we are at the end of the list, if so we loop back around to the start.
+    if (current == NULL){
+        current = head;
+    }
+
+    while(current!=NULL){
+        if(current->size > size && current->alloc==0){
+            first = current;
+        }
+        current = current->next;
+    }
+    //printf("No free space was big enough for this memoryBlock");
+    return first;
+}
+
 void insertMemBlock(struct memoryList* current, size_t size){
     int newSize = current->size - size;
     struct memoryList *reqNode;
