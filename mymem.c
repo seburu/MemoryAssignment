@@ -9,8 +9,7 @@
  * You may change this to fit your implementation.
  */
 
-struct memoryList
-{
+struct memoryList{
     // doubly-linked list
     struct memoryList *prev;
     struct memoryList *next;
@@ -48,7 +47,7 @@ struct memoryList *first(size_t size){
 
 struct memoryList *next(size_t size){
     struct memoryList *current = nextFit;
-    struct memoryList *first;
+    struct memoryList *next;
 
     //We check if we are at the end of the list, if so we loop back around to the start.
     if (current == NULL){
@@ -57,12 +56,16 @@ struct memoryList *next(size_t size){
 
     while(current!=NULL){
         if(current->size > size && current->alloc==0){
-            first = current;
+            next = current;
         }
         current = current->next;
     }
+    if(next == NULL){
+        first(current);
+    }
+
     //printf("No free space was big enough for this memoryBlock");
-    return first;
+    return next;
 }
 
 void insertMemBlock(struct memoryList* current, size_t size){
@@ -96,8 +99,7 @@ void insertMemBlock(struct memoryList* current, size_t size){
    sz specifies the number of bytes that will be available, in total, for all mymalloc requests.
 */
 
-void initmem(strategies strategy, size_t sz)
-{
+void initmem(strategies strategy, size_t sz){
     myStrategy = strategy;
 
     /* all implementations will need an actual block of memory to use */
@@ -174,18 +176,17 @@ void *mymalloc(size_t requested)
         case NotSet:
             return NULL;
         case First:
-            return NULL;
+             current = first(requested);
         case Best:
             *current = bestFit(requested);
         case Worst:
             *current = worstFit(requested);
         case Next:
-            return NULL;
+             current = next(requested);
     }
 
     //myMalloc on current with requested size.
     insertMemBlock(current,requested);
-
 }
 
 
@@ -204,8 +205,7 @@ void myfree(void* block)
  */
 
 /* Get the number of contiguous areas of free space in memory. */
-int mem_holes()
-{
+int mem_holes(){
     int counter = 0;
     struct memoryList current = *head;
     struct memoryList next;
@@ -259,8 +259,7 @@ int mem_largest_free(){
 }
 
 /* Number of free blocks smaller than or equal to "size" bytes. */
-int mem_small_free(int size)
-{
+int mem_small_free(int size){
     struct memoryList *current = head;
     int smallnodes = 0;
     while(current!=NULL){
@@ -273,8 +272,7 @@ int mem_small_free(int size)
 }
 
 //Is a particular byte allocated or not?
-char mem_is_alloc(void *ptr)
-{
+char mem_is_alloc(void *ptr){
     struct memoryList *current = head;
     while(current!=NULL){
         if(current->ptr == ptr && current->alloc==1){
@@ -292,8 +290,7 @@ char mem_is_alloc(void *ptr)
 
 
 //Returns a pointer to the memory pool.
-void *mem_pool()
-{
+void *mem_pool(){
     return myMemory;
 }
 
