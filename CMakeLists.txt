@@ -3,4 +3,4 @@ project(MemoryAssignment C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(MemoryAssignment mymem.c)
+add_executable(MemoryAssignment mymem.c memorytests.c mymem.h testrunner.c testrunner.h memorytests.o)

@@ -123,6 +123,11 @@ void initmem(strategies strategy, size_t sz){
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
     //Husk at iterere igennem listen!!
     if(head!=NULL){
+        struct memoryList *current = head->next;
+        while(current != NULL){
+            free(current);
+            current = current->next;
+        }
         free(head);
     }
 
