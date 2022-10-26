@@ -52,6 +52,9 @@ struct memoryList *first(size_t size){
 }
 
 struct memoryList *next(size_t size){
+    if(nextFit == NULL){
+        nextFit = head;
+    }
     struct memoryList *current = nextFit, *roundtrip = nextFit;
 
     do{
@@ -94,7 +97,7 @@ void *insertMemBlock(struct memoryList* current, size_t size){
     extraNode->alloc = 0;
 //  current->ptr = current->ptr;
     extraNode->ptr = current->ptr + size;
-
+    nextFit = current;
     return current->ptr;
 }
 
@@ -123,17 +126,17 @@ void initmem(strategies strategy, size_t sz){
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
     //Husk at iterere igennem listen!!
     if(head!=NULL){
-        struct memoryList *current = head->next;
-        while(current != NULL){
-            free(current);
-            current = current->next;
+        struct memoryList *tmp = head;
+        while(head != NULL){
+            head = head->next;
+            free(tmp);
+            tmp = tmp->next;
         }
-        free(head);
     }
 
     myMemory = malloc(sz);
-    printf(myMemory);
     /* TODO: Initialize memory management structure. */
+    head = malloc(sz);
     head->next = NULL;
     head->prev = NULL;
     head->alloc = 0;
@@ -141,40 +144,42 @@ void initmem(strategies strategy, size_t sz){
     head->ptr = myMemory;
 
 }
-
 struct memoryList *best(size_t requested){
-    struct memoryList *current = head;
+    struct memoryList *current = head, *choice = NULL;
     //brug firstFit her i stedet. Midlertidig løsning:
-    struct memoryList *best = first(requested);
-
+    int diff = mySize + 1;
     while(current != NULL){
-        if(current->alloc == 0){
-            int diff = current->size - requested;
-            if (diff >= 0 && diff < (best->size - requested)){
-                best = current;
-            }
-        }
-        current = current->next;
+        if(current->alloc == 0
+           && current->size < diff
+           && current->size >= requested){
+            diff = current->size;
+            choice = current;
+
     }
-    //return best fit node
-    return best;
+    current = current->next;
 }
+//return best fit node
+return choice;
+}
+
 struct memoryList *worst(size_t requested){
-    struct memoryList *current = head;
-    struct memoryList *worst = first(requested);
-
+    struct memoryList *current = head, *choice = NULL;
+    //brug firstFit her i stedet. Midlertidig løsning:
+    int diff = 0;
     while(current != NULL){
-        if(current->alloc == 0){
-            int diff = current->size - requested;
-            if (diff >= 0 && current->size > worst->size){
-                worst = current;
-            }
+        if(current->alloc == 0
+           && current->size > diff
+           && current->size >= requested){
+            diff = current->size;
+            choice = current;
+
         }
         current = current->next;
     }
-    //return worst fit node
-    return worst;
+//return best fit node
+    return choice;
 }
+
 
 /* Allocate a block of memory with the requested size.
  *  If the requested block is not available, mymalloc returns NULL.
@@ -206,15 +211,16 @@ void *mymalloc(size_t requested){
     }
 
     //myMalloc on current with requested size.
-    insertMemBlock(current,requested);
+
     //return noget!
+    return insertMemBlock(current,requested);
 }
 
 // 1 til 0. Hvis der er naboer der er 0 merges de.
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block){
 
-    struct memoryList* current = head, *iamadummytobedeleted;
+    struct memoryList* current = head, *toBeDeleted;
     if(current == NULL){return;}
     while (current != NULL){
         if(current->ptr == block){
@@ -228,39 +234,39 @@ void myfree(void* block){
     //check if prev node exist and is also null, then merge
     if(current->prev != NULL && current->prev->alloc == 0){
         //set struct pointers to look at what they're supposed to be used
-        iamadummytobedeleted = current;
+        toBeDeleted = current;
         current = current->prev;
 
         //fix data
-        current->size += iamadummytobedeleted->size;
+        current->size += toBeDeleted->size;
         //current->alloc = 0;
 
         //fix pointers
-        current->next = iamadummytobedeleted->next;
-        if(iamadummytobedeleted->next != NULL){
-            iamadummytobedeleted->next->prev = current;
+        current->next = toBeDeleted->next;
+        if(toBeDeleted->next != NULL){
+            toBeDeleted->next->prev = current;
         }
 
-        free(iamadummytobedeleted);
+        free(toBeDeleted);
     }
 
     //check if next node exist and is also null, then merge
     if(current->next != NULL && current->next->alloc == 0){
         //set struct pointers to look at what they're supposed to be used
-        iamadummytobedeleted = current->next;
+        toBeDeleted = current->next;
         //current = current;
 
         //fix data
-        current->size += iamadummytobedeleted->size;
+        current->size += toBeDeleted->size;
         //current->alloc = 0;
 
         //fix pointers
-        current->next = iamadummytobedeleted->next;
-        if(iamadummytobedeleted->next != NULL){
-            iamadummytobedeleted->next->prev = current;
+        current->next = toBeDeleted->next;
+        if(toBeDeleted->next != NULL){
+            toBeDeleted->next->prev = current;
         }
 
-        free(iamadummytobedeleted);
+        free(toBeDeleted);
     }
 }
 
@@ -328,7 +334,7 @@ int mem_small_free(int size){
     struct memoryList *current = head;
     int smallnodes = 0;
     while(current!=NULL){
-        if(current->alloc == 0 && current->size<size){
+        if(current->alloc == 0 && current->size<=size){
             smallnodes++;
         }
         current = current->next;
@@ -437,6 +443,7 @@ void print_memory_status()
  * We have given you a simple example to start.
  */
 void try_mymem(int argc, char **argv) {
+    /*
     strategies strat;
     void *a, *b, *c, *d, *e;
     if(argc > 1)
@@ -445,8 +452,8 @@ void try_mymem(int argc, char **argv) {
         strat = First;
 
 
-    /* A simple example.
-       Each algorithm should produce a different layout. */
+    A simple example.
+       Each algorithm should produce a different layout.
 
     initmem(strat,500);
     //my malloc skal returnerer en pointer til hvor der er blevet indsat noget?
@@ -460,5 +467,5 @@ void try_mymem(int argc, char **argv) {
 
     print_memory();
     print_memory_status();
-
+*/
 }
