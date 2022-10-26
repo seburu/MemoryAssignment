@@ -60,6 +60,7 @@ void insertMemBlock(struct memoryList* current, size_t size){
     reqNode->prev = extraNode->prev;
     extraNode->prev = reqNode;
     reqNode->next = extraNode;
+    reqNode->ptr = &reqNode;
 }
 
 
@@ -87,12 +88,19 @@ void initmem(strategies strategy, size_t sz)
     if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+    if(head!=NULL){
+        free(head);
+    }
+
 
     myMemory = malloc(sz);
-
+    printf(myMemory);
     /* TODO: Initialize memory management structure. */
-
+    head->next = NULL;
+    head->prev = NULL;
+    head->alloc = 0;
     head->size = sz;
+    head->ptr = myMemory;
 
 
 }
@@ -124,7 +132,7 @@ struct memoryList bestFit(size_t requested){
 
 void *mymalloc(size_t requested)
 {
-    struct memoryList current;
+    struct memoryList *current;
     assert((int)myStrategy > 0);
 
     switch (myStrategy)
@@ -134,17 +142,16 @@ void *mymalloc(size_t requested)
         case First:
             return NULL;
         case Best:
-            current = bestFit(requested);
+            *current = bestFit(requested);
         case Worst:
             return NULL;
         case Next:
             return NULL;
     }
-    //struct memoryList* ptr = *current;
-    //myMalloc on current with requested size.
-    //insertMemBlock(ptr,requested);
 
-    //return NULL;
+    //myMalloc on current with requested size.
+    insertMemBlock(current,requested);
+
 }
 
 
