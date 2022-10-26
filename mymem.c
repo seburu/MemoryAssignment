@@ -123,6 +123,7 @@ void initmem(strategies strategy, size_t sz)
     if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+    //Husk at iterere igennem listen!!
     if(head!=NULL){
         free(head);
     }
@@ -159,7 +160,7 @@ struct memoryList *worst(size_t requested){
     struct memoryList *current = head;
     struct memoryList *worst = first(requested);
 
-    while(current->next != NULL){
+    while(current != NULL){
         if(current->alloc == 0){
             int diff = current->size - requested;
             if (diff >= 0 && current->size > worst->size){
