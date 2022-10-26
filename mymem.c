@@ -33,9 +33,9 @@ static struct memoryList *head;
 static struct memoryList *nextFit;
 //struct memoryList* prevNode = NULL;
 
-struct memoryList *first(size_t size,char alloc){
+struct memoryList *first(size_t size){
     struct memoryList *current = head;
-    struct memoryList *first = malloc(size);
+    struct memoryList *first;
 
     while(current!=NULL){
       if(current->size > size && current->alloc==0){
@@ -43,7 +43,7 @@ struct memoryList *first(size_t size,char alloc){
       }
       current = current->next;
     }
-    printf("No free space was big enough for this memoryBlock");
+    //printf("No free space was big enough for this memoryBlock");
     return first;
 }
 
@@ -100,7 +100,7 @@ void initmem(strategies strategy, size_t sz)
 struct memoryList bestFit(size_t requested){
     struct memoryList current = *head;
     //brug firstFit her i stedet. Midlertidig løsning:
-    struct memoryList best = *head;
+    struct memoryList best = *first(requested);
 
     while(current.next != NULL){
         if(current.alloc == 0){
@@ -140,8 +140,9 @@ void *mymalloc(size_t requested)
         case Next:
             return NULL;
     }
+    //struct memoryList* ptr = *current;
     //myMalloc on current with requested size.
-    insertMemBlock(current*,requested);
+    //insertMemBlock(ptr,requested);
 
     //return NULL;
 }
