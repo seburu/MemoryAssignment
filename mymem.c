@@ -38,6 +38,7 @@ struct memoryList *first(size_t size){
     while(current!=NULL){
       if(current->size > size && current->alloc==0){
           first = current;
+          break;
       }
       current = current->next;
     }
@@ -57,11 +58,12 @@ struct memoryList *next(size_t size){
     while(current!=NULL){
         if(current->size > size && current->alloc==0){
             next = current;
+            break;
         }
         current = current->next;
     }
     if(next == NULL){
-        first(current);
+        first(size);
     }
 
     //printf("No free space was big enough for this memoryBlock");
@@ -70,7 +72,7 @@ struct memoryList *next(size_t size){
 
 void insertMemBlock(struct memoryList* current, size_t size){
     int newSize = current->size - size;
-    struct memoryList *reqNode;
+    struct memoryList *reqNode = NULL;
     struct memoryList *extraNode;
 
     extraNode = current;
@@ -114,7 +116,6 @@ void initmem(strategies strategy, size_t sz){
 
 
     myMemory = malloc(sz);
-    printf(myMemory);
     /* TODO: Initialize memory management structure. */
     head->next = NULL;
     head->prev = NULL;
@@ -135,6 +136,7 @@ struct memoryList bestFit(size_t requested){
             int diff = current.size - requested;
             if (diff >= 0 && diff < (best.size - requested)){
                 best = current;
+                break;
             }
         }
         current = *current.next;
@@ -151,6 +153,7 @@ struct memoryList worstFit(size_t requested){
             int diff = current.size - requested;
             if (diff >= 0 && current.size > worst.size){
                 worst = current;
+                break;
             }
         }
         current = *current.next;
@@ -166,8 +169,7 @@ struct memoryList worstFit(size_t requested){
  */
 
 
-void *mymalloc(size_t requested)
-{
+void *mymalloc(size_t requested){
     struct memoryList *current;
     assert((int)myStrategy > 0);
 
@@ -187,6 +189,7 @@ void *mymalloc(size_t requested)
 
     //myMalloc on current with requested size.
     insertMemBlock(current,requested);
+    return NULL;
 }
 
 
@@ -372,7 +375,8 @@ void print_memory_status()
  * We have given you a simple example to start.
  */
 void try_mymem(int argc, char **argv) {
-    strategies strat;
+/*    strategies strat;
+
     void *a, *b, *c, *d, *e;
     if(argc > 1)
         strat = strategyFromString(argv[1]);
@@ -380,8 +384,8 @@ void try_mymem(int argc, char **argv) {
         strat = First;
 
 
-    /* A simple example.
-       Each algorithm should produce a different layout. */
+     A simple example.
+       Each algorithm should produce a different layout.
 
     initmem(strat,500);
 
@@ -396,4 +400,5 @@ void try_mymem(int argc, char **argv) {
     print_memory();
     print_memory_status();
 
+ */
 }
