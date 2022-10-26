@@ -122,6 +122,22 @@ struct memoryList bestFit(size_t requested){
     //return best fit node
     return best;
 }
+struct memoryList worstFit(size_t requested){
+    struct memoryList current = *head;
+    struct memoryList worst = *first(requested);
+
+    while(current.next != NULL){
+        if(current.alloc == 0){
+            int diff = current.size - requested;
+            if (diff >= 0 && current.size > worst.size){
+                worst = current;
+            }
+        }
+        current = *current.next;
+    }
+    //return worst fit node
+    return worst;
+}
 
 /* Allocate a block of memory with the requested size.
  *  If the requested block is not available, mymalloc returns NULL.
@@ -144,7 +160,7 @@ void *mymalloc(size_t requested)
         case Best:
             *current = bestFit(requested);
         case Worst:
-            return NULL;
+            current = worstFit(requested);
         case Next:
             return NULL;
     }
